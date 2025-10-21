@@ -1,0 +1,121 @@
+site_name: Invoice Collector Documentation
+site_description: Comprehensive documentation for Invoice Collector - automated invoice retrieval from customer portals, APIs, and email inboxes
+site_author: Invoice Collector Team
+site_url: https://invoice-collector.com
+
+repo_name: EckPhi/invoice-collector
+repo_url: https://github.com/EckPhi/invoice-collector
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  language: en
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: green
+      accent: green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Configuration: getting-started/configuration.md
+  - User Guide:
+    - Overview: guides/overview.md
+    - Collectors: guides/collectors.md
+    - Managing Credentials: guides/credentials.md
+    - Working with Invoices: guides/invoices.md
+  - API Reference:
+    - Overview: api/overview.md
+    - Authentication: api/authentication.md
+    - Endpoints: api/endpoints.md
+    - Webhooks: api/webhooks.md
+  - Developers:
+    - Development Setup: developers/setup.md
+    - Architecture: developers/architecture.md
+    - Creating Collectors: developers/creating-collectors.md
+    - Testing: developers/testing.md
+    - Contributing: developers/contributing.md
+  - Deployment:
+    - Docker: deployment/docker.md
+    - Environment Variables: deployment/environment-variables.md
+    - Database Setup: deployment/database.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/EckPhi/invoice-collector
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/dMXTdpxMqY
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2024 Invoice Collector Team
