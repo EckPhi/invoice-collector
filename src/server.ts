@@ -20,12 +20,32 @@ import { Plan } from './model/plan';
 import { State } from './model/state';
 import { WebSocketServer } from './websocket/webSocketServer';
 
+type CredentialFieldPreview = {
+    key: string,
+    label: string,
+    value: string
+};
+
+type StoredCredentialPreview = {
+    credentialId: string,
+    collectorId: string,
+    collectorName: string,
+    website: string,
+    note: string,
+    user: {
+        id: string,
+        remoteId: string
+    },
+    fields: CredentialFieldPreview[]
+};
+
 export class Server {
 
     static OAUTH_TOKEN_VALIDITY_DURATION_MS = Number(utils.getEnvVar("OAUTH_TOKEN_VALIDITY_DURATION_MS", "1800000"));
     static RESET_PASSWORD_TOKEN_VALIDITY_DURATION_MS = Number(utils.getEnvVar("RESET_PASSWORD_TOKEN_VALIDITY_DURATION_MS", "3600000"));
     static UI_BEARER_VALIDITY_DURATION_MS = Number(utils.getEnvVar("UI_BEARER_VALIDITY_DURATION_MS", "3600000"));
     static IS_SELF_HOSTED: boolean = utils.getEnvVar("IS_SELF_HOSTED", "true").toLowerCase() === "true";
+    static SENSITIVE_PARAM_TYPES: Set<string> = new Set(["password", "secret", "otp", "twofa", "pin", "code"]);
 
     uiTokens: { [key: string]: User };
     resetTokens: { [key: string]: string };
@@ -364,6 +384,88 @@ export class Server {
 
         // Get customer stats
         return await customer.getStats();
+    }
+
+    // BEARER AUTHENTICATION
+    public async get_credential_summaries(bearer: string | undefined): Promise<StoredCredentialPreview[]> {
+        // Get customer from bearer
+        const customer = await this.getCustomerFromBearer(bearer);
+
+        // Load related users
+        const users = await customer.getUsers();
+
+        const secretManager = await SecretManagerFactory.getSecretManager();
+        const summaries: StoredCredentialPreview[] = [];
+
+        for (const user of users) {
+            const credentials = await user.getCredentials();
+            for (const credential of credentials) {
+                let collector;
+                try {
+                    collector = await CollectorLoader.get(credential.collector_id);
+                }
+                catch (err) {
+                    console.warn(`Unable to load collector ${credential.collector_id} for credential ${credential.id}`, err);
+                    continue;
+                }
+
+                let secret: Secret | null = null;
+                try {
+                    secret = await secretManager.getSecret(credential.secret_manager_id);
+                }
+                catch (err) {
+                    console.warn(`Unable to load secret for credential ${credential.id}`, err);
+                    continue;
+                }
+
+                if (!secret || !secret.params) {
+                    continue;
+                }
+
+                const safeFields: CredentialFieldPreview[] = [];
+                const locale = user.locale || I18n.DEFAULT_LOCALE;
+
+                for (const [paramKey, paramConfig] of Object.entries(collector.config.params)) {
+                    const paramType = (paramConfig.type || "").toLowerCase();
+                    if (Server.SENSITIVE_PARAM_TYPES.has(paramType)) {
+                        continue;
+                    }
+
+                    const rawValue = secret.params[paramKey];
+                    if (rawValue === undefined || rawValue === null || rawValue === "") {
+                        continue;
+                    }
+
+                    const translatedLabel = paramConfig.name ? I18n.get(paramConfig.name, locale) : "";
+                    const label = translatedLabel || paramConfig.name || paramKey;
+
+                    safeFields.push({
+                        key: paramKey,
+                        label,
+                        value: typeof rawValue === "string" ? rawValue : JSON.stringify(rawValue)
+                    });
+                }
+
+                if (!safeFields.length) {
+                    continue;
+                }
+
+                summaries.push({
+                    credentialId: credential.id,
+                    collectorId: collector.config.id,
+                    collectorName: collector.config.name,
+                    website: collector.config.website,
+                    note: credential.note,
+                    user: {
+                        id: user.id,
+                        remoteId: user.remote_id
+                    },
+                    fields: safeFields
+                });
+            }
+        }
+
+        return summaries;
     }
 
 

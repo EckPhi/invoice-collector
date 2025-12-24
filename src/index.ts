@@ -243,6 +243,22 @@ app.get('/api/v1/customer/stats', async (req, res) => {
     }
 });
 
+// BEARER AUTHENTICATION
+app.get('/api/v1/customer/credentials/summary', async (req, res) => {
+    try {
+        // Get stored credential summary
+        console.log(`GET credential summaries`);
+        const response = await server.get_credential_summaries(req.headers.authorization);
+
+        // Build response
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(response));
+    }
+    catch (e) {
+        handle_error(e, req, res);
+    }
+});
+
 // ---------- USER ENDPOINTS ----------
 
 // BEARER AUTHENTICATION
