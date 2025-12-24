@@ -26,6 +26,42 @@ declare global {
 const server = new Server();
 const PORT = utils.getEnvVar("PORT");
 const DEBUG_ENABLED = utils.getEnvVar("ENV", "prod") === "debug";
+const DEFAULT_ALLOWED_ORIGINS = [
+    'http://localhost:4711',
+    'http://localhost:5173',
+    'https://invoice-collector.com',
+    'https://app.invoice-collector.com'
+];
+const ALLOWED_ORIGINS = utils.getEnvVar("CORS_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS.join(',')).split(',').map((origin) => origin.trim()).filter(Boolean);
+const ALLOW_ALL_ORIGINS = ALLOWED_ORIGINS.includes('*');
+
+function appendVaryHeader(res, value: string) {
+    const existing = res.getHeader('Vary');
+    if (!existing) {
+        res.setHeader('Vary', value);
+        return;
+    }
+    const existingValue = Array.isArray(existing) ? existing.join(', ') : existing.toString();
+    if (!existingValue.includes(value)) {
+        res.setHeader('Vary', `${existingValue}, ${value}`);
+    }
+}
+
+app.use((req, res, next) => {
+    const origin = req.header('Origin');
+    if (origin && (ALLOW_ALL_ORIGINS || ALLOWED_ORIGINS.includes(origin))) {
+        res.setHeader('Access-Control-Allow-Origin', ALLOW_ALL_ORIGINS ? origin : origin);
+        appendVaryHeader(res, 'Origin');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        res.status(204).end();
+        return;
+    }
+    next();
+});
 
 function handle_error(e, req, res){
     if(e instanceof StatusError) {
