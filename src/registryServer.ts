@@ -139,13 +139,15 @@ You are still able to use the product but some features may not work as expected
     public async sendResetPasswordEmail(email: string, resetToken: string): Promise<void> {
         // Send email
         console.log("Sending reset password email to", email);
+        const resetUrl = `${RegistryServer.FRONTEND}/reset-password?token=${encodeURIComponent(resetToken)}`;
         await this.sendEmail(
             [email],
             "Define your password",
             [
                 { text: `Hello`, bold: false, center: false, italic: false },
                 { text: `You requested to change your password. Please use the following link:`, bold: false, center: false, italic: false },
-                { text: `<a href="${RegistryServer.FRONTEND}/reset-password?token=${resetToken}" rel="nofollow noopener noreferrer">Define a new password</a>`, bold: true, center: true, italic: false },
+                { text: `<a href="${resetUrl}" rel="nofollow noopener noreferrer">Define a new password</a>`, bold: true, center: true, italic: false },
+                { text: resetUrl, bold: false, center: true, italic: false },
                 { text: `This link is valid for ${Math.round(Server.RESET_PASSWORD_TOKEN_VALIDITY_DURATION_MS / 60000)} minutes.`, bold: false, center: false, italic: false },
                 { text: null, bold: false, center: false, italic: false },
                 { text: "You are not the requestor? Kindly ignore this message.", bold: false, center: false, italic: true }
