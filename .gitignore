@@ -5,3 +5,7 @@ media/
 coverage/
 test/results/
 .env
+
+# MkDocs
+site/
+.cache/
